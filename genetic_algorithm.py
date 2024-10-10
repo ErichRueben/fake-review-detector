@@ -11,8 +11,8 @@ from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
 
 FILE = 'fake reviews dataset.csv'
-PARENTS = 5
-ROUNDS = 2
+PARENTS = 10
+ROUNDS = 1
 MODEL_TRAINING_PERCENTAGE = 0.5
 TARGET_COLUMN = 'label'
 FEATURE_COLUMN = 'text_'
@@ -57,7 +57,7 @@ def trainClassifiers( data ):
         ( 'naivebayes', MultinomialNB() )
     ] )
     naivebayes.fit( data[ 'X' ], data[ 'y' ] )
-
+    
     return { 'logreg' : logreg, 'svc' : svc, 'kneighbors' : kneighbors, 'naivebayes' : naivebayes }
 
 
@@ -86,24 +86,35 @@ def evaluateFitness( parent, pipelines, data ):
     svc_pred = pipelines[ 'svc' ].predict( X )
     naivebayes_pred = pipelines[ 'naivebayes' ].predict( X )
 
-    accuracy = (
+    fitness = (
         parent[ 'logreg' ] * ( logreg_pred == y ).mean() +
         parent[ 'kneighbors' ] * ( kneighbors_pred == y ).mean() +
         parent[ 'svc' ] * ( svc_pred == y ).mean() +
         parent[ 'naivebayes' ] * ( naivebayes_pred == y ).mean()
     )
 
-    print( accuracy )
+    print( f'Parent { parent[ 'id' ] } has fitness { fitness }' )
+    return { 'id' : parent[ 'id' ], 'fitness' : fitness }
+
+
+def getBestParents( fitness ):
+    best_parents = []
+    for _ in range( int( PARENTS / 2 ) ):
+        sorted_fitness = sorted( fitness, key=lambda x : x[ 'fitness' ], reverse=True )
+        best_parents = sorted_fitness[ :int( PARENTS / 2 ) ]
+    return best_parents
+
 
 def geneticAlgorithm( pipelines, data ):
     parents = initializeParents()
 
     for index in range( ROUNDS ):
+        fitness_result = []
         for parent in parents:
-            print( f'Parent: { parent[ 'id' ] }' )
-            print( parent )
-            evaluateFitness( parent, pipelines, data );
-            print( '\n' )
+            fitness_result.append( evaluateFitness( parent, pipelines, data ) )
+        best_parents = getBestParents( fitness_result )
+        print( 'Best Parents:' )
+        print( best_parents )
 
 
 def main():
