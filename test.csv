@@ -1,0 +1,7 @@
+review,reality
+"I am written by a real person",0
+"I am written by a robot",1
+"A robot wrote me",0
+"A person wrote me",1
+"Robots don't exist, therefore a robot did not write this",1
+"People are dumb and can't comprehend words, therefore a person did not write me",0
