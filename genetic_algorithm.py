@@ -11,9 +11,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import MultinomialNB
 
-FILE = 'fake reviews dataset.csv'
+FILE = 'dataset.csv'
 PARENTS = 10
-ROUNDS = 1
+ROUNDS = 100
 MODEL_TRAINING_PERCENTAGE = 0.5
 TARGET_COLUMN = 'label'
 FEATURE_COLUMN = 'text_'
@@ -61,34 +61,45 @@ def trainClassifiers( data ):
 def initializeParents():
     parents = []
     for index in range( PARENTS ):
-        random_weights = np.random.dirichlet( np.ones( 4 ) )
-        parents.append( 
-            Parent( 
+        random_weights = np.random.rand( 4 )
+        random_weights /= np.sum( random_weights )
+        new_parent = Parent( 
                 index, 
                 random_weights[ 0 ], 
                 random_weights[ 1 ],
                 random_weights[ 2 ],
                 random_weights[ 3 ]
-            ) 
-        )
+            )
+        parents.append( new_parent )
 
     return parents
 
 
-def uniformCrossover():
-    # To Do
-    return
+def uniformCrossover( parents, fitness_scores ):
+    num_parents, len_chromos = len(parents), len( parents[ 0 ].chromos )
+    fitness_prob = np.array( fitness_scores ) / np.sum( fitness_scores )
+    offsprings = []
+
+    for index in range( len( parents ) ):
+        chromos = []
+        for i in range( len_chromos ):
+            chosen_parent = np.random.choice( num_parents, p=fitness_prob )
+            chromos.append( parents[ chosen_parent ].chromos[ i ] )
+        chromos /= sum( chromos )
+        offsprings.append( Parent( index, chromos[ 0 ], chromos[ 1 ], chromos[ 2 ], chromos[ 3 ] ) )
+    return offsprings
 
 
 def geneticAlgorithm( pipelines, data ):
     parents = initializeParents()
-
+    fitness_scores = []
     for index in range( ROUNDS ):
+        print( f'ROUND { index }:' )
         fitness_scores = []
         for parent in parents:
             fitness_scores.append( parent.evaluateFitness( pipelines, data ) )
-        parents = uniformCrossover()
-
+        parents = uniformCrossover( parents, fitness_scores )
+        print( f'    Average Fitness: { np.mean( fitness_scores ) * 100 }%' )
 
 def main():
     classifier_training_data, genetic_data = readData()
